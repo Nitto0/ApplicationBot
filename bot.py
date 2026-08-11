@@ -3,13 +3,17 @@ from aiogram import Bot, Dispatcher
 
 from config import BOT_TOKEN
 from handlers.start import rt_start
+from handlers.application import rt_app
 
 
 async def main():
     bot = Bot(BOT_TOKEN)
 
     dp = Dispatcher()
-    dp.include_router(rt_start)
+    dp.include_routers(
+        rt_start,
+        rt_app
+    )
     await dp.start_polling(bot)
 
 
