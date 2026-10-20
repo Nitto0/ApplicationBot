@@ -6,6 +6,7 @@ from states.application import AppState
 from keyboards.inline import service_kb
 from keyboards.reply import kb_phone
 from utils.validators import check_name
+from utils.validators import parse_phone, validate_phone
 
 rt_app = Router()
 
@@ -49,3 +50,30 @@ async def entering_name_handler(message: Message, state: FSMContext):
                          reply_markup=kb_phone)
 
     await state.set_state(AppState.entering_phone)
+
+
+@rt_app.message(
+    AppState.entering_phone
+)
+async def entering_phone_handler(message: Message, state: FSMContext):
+    if not (message.contact or message.text):
+        await message.answer("Введите телефон!", reply_markup=kb_phone)
+        return
+
+    phone = message.contact.phone_number if message.contact else (
+        message.text.strip())
+
+    phone = parse_phone(phone)
+
+    if not phone:
+        await message.answer("Некорректный номер телефона!", reply_markup=kb_phone)
+        return
+
+    if not validate_phone(phone):
+        await message.answer("Длина номера должна быть 10-15 символов!")
+        return
+
+    await state.update_data(phone=phone)
+    await message.answer("Номер сохранен")
+
+    await state.set_state(AppState.confirming)
