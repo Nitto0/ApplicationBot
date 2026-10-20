@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 
 from states.application import AppState
 from keyboards.inline import service_kb
+from keyboards.reply import kb_phone
 from utils.validators import check_name
 
 rt_app = Router()
@@ -40,10 +41,11 @@ async def entering_name_handler(message: Message, state: FSMContext):
 
     name = message.text.strip()
     if not check_name(name):
-        await message.answer("Неверный тип имени")
+        await message.answer("Имя должно быть от 2 символов, и оно не должно состоять только из цифр")
         return
 
     await state.update_data(name=name)
-    await message.answer("Теперь введите свой номер телефона")
+    await message.answer("Теперь введите свой номер телефона",
+                         reply_markup=kb_phone)
 
     await state.set_state(AppState.entering_phone)
