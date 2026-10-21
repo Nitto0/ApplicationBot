@@ -1,4 +1,4 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
@@ -6,6 +6,8 @@ from states.application import AppState
 from keyboards.inline import service_kb, confirm_kb
 from keyboards.reply import kb_phone, kb_start
 from utils.validators import parse_phone, validate_phone, check_name
+from data.services import services
+from config import ADMIN_ID
 
 rt_app = Router()
 
@@ -53,11 +55,6 @@ async def entering_name_handler(message: Message, state: FSMContext):
 
 @rt_app.message(AppState.entering_phone)
 async def entering_phone_handler(message: Message, state: FSMContext):
-    services = {"telegram_bot": "Разработка Telegram-бота",
-                "website": "Разработка сайта",
-                "rework_python": "Доработка Python-проекта",
-                "other": "Другое"}
-
     if not (message.contact or message.text):
         await message.answer("Введите телефон!", reply_markup=kb_phone)
         return
@@ -75,7 +72,7 @@ async def entering_phone_handler(message: Message, state: FSMContext):
         await message.answer("Длина номера должна быть 10-15 цифр!")
         return
 
-    if message.contact.user_id != message.from_user.id:
+    if message.contact.user_id != message.from_user.id and message.contact:
         await message.answer("Это не ваш номер!")
         return
 
@@ -86,12 +83,13 @@ async def entering_phone_handler(message: Message, state: FSMContext):
     service = services.get(items.get("service"))
     name = items.get("name")
 
-    await message.answer(f'''Проверьте данные заявки:
-                                Услуга: {service}
-                                Имя: {name}
-                                Телефон: {phone}
-
-                                Отправить заявку?''', reply_markup = confirm_kb)
+    await message.answer(f"Проверьте данные заявки:"
+                         f""
+                         f"Услуга: {service}"
+                         f"Имя: {name}"
+                         f"Телефон: {phone}"
+                         f""
+                         f"Отправить заявку?", reply_markup=confirm_kb)
 
     await state.set_state(AppState.confirming)
 
@@ -100,7 +98,27 @@ async def entering_phone_handler(message: Message, state: FSMContext):
     AppState.confirming,
     F.data == "confirm"
 )
-async def confirming_handler(callback: CallbackQuery, state: FSMContext):
+async def confirming_handler(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    items = await state.get_data()
+
+    name = items.get("name")
+    service = services.get(items.get("service"))
+    phone = items.get("phone")
+
+    user_id = callback.from_user.id
+    user_name = callback.from_user.username if callback.from_user.username \
+        else "Отсутствует"
+
+    await bot.send_message(ADMIN_ID,
+                           f"Новая заявка"
+                           f""
+                           f"Услуга: {service}"
+                           f"Имя: {name}"
+                           f"Телефон: {phone}"
+                           f""
+                           f"Telegram ID: {user_id}"
+                           f"Username: {user_name}")
+
     await callback.answer()
     await callback.message.answer("Заявка подтверждена")
     await state.clear()
