@@ -10,22 +10,22 @@ def check_name(name: str) -> bool:
 
 def parse_phone(phone: str):
     confirmed_sym = "0123456789+-() "
+    nums = "0123456789"
     parsed = ""
 
     for dig in phone:
         if dig not in confirmed_sym:
             return None
-        parsed += dig
+        if dig in nums:
+            parsed += dig
 
     return parsed
 
 
 def validate_phone(phone: str):
-    flag = True
-    if not (isinstance(phone, str) or
-            phone.isdigit() or
-            phone is not None or
+    if not (phone is not None and
+            isinstance(phone, str) and
+            phone.isdigit() and
             10 <= len(phone) <= 15):
-        flag = False
-
-    return flag
+        return False
+    return True
