@@ -106,22 +106,24 @@ async def confirming_handler(callback: CallbackQuery, state: FSMContext, bot: Bo
     phone = items.get("phone")
 
     user_id = callback.from_user.id
-    user_name = callback.from_user.username if callback.from_user.username \
+    user_name = "@" + callback.from_user.username if callback.from_user.username \
         else "Отсутствует"
 
-    await add_application(user_id, user_name, service, name, phone)
-
-    await bot.send_message(ADMIN_ID,
-                           f"Новая заявка\n\n"
-                           f"Услуга: {service}\n"
-                           f"Имя: {name}\n"
-                           f"Телефон: {phone}\n\n"
-                           f"Telegram ID: {user_id}"
-                           f"Username: @{user_name}")
-
-    await callback.answer()
-    await callback.message.answer("Заявка подтверждена")
-    await state.clear()
+    try:
+        await add_application(user_id, user_name, service, name, phone)
+        await bot.send_message(ADMIN_ID,
+                               f"Новая заявка\n\n"
+                               f"Услуга: {service}\n"
+                               f"Имя: {name}\n"
+                               f"Телефон: {phone}\n\n"
+                               f"Telegram ID: {user_id}\n"
+                               f"Username: {user_name}")
+        await callback.answer()
+        await callback.message.answer("Заявка подтверждена")
+        await state.clear()
+    except Exception as e:
+        print(e)
+        await callback.message.answer("Произошла ошибка, не удалось сохранить заявку.", reply_markup=confirm_kb)
 
 
 @rt_app.callback_query(
