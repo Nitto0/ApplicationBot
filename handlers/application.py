@@ -72,7 +72,7 @@ async def entering_phone_handler(message: Message, state: FSMContext):
         await message.answer("Длина номера должна быть 10-15 цифр!")
         return
 
-    if message.contact.user_id != message.from_user.id and message.contact:
+    if message.contact and message.contact.user_id != message.from_user.id:
         await message.answer("Это не ваш номер!")
         return
 
@@ -83,12 +83,10 @@ async def entering_phone_handler(message: Message, state: FSMContext):
     service = services.get(items.get("service"))
     name = items.get("name")
 
-    await message.answer(f"Проверьте данные заявки:"
-                         f""
-                         f"Услуга: {service}"
-                         f"Имя: {name}"
-                         f"Телефон: {phone}"
-                         f""
+    await message.answer(f"Проверьте данные заявки:\n\n"
+                         f"Услуга: {service}\n"
+                         f"Имя: {name}\n"
+                         f"Телефон: {phone}\n\n"
                          f"Отправить заявку?", reply_markup=confirm_kb)
 
     await state.set_state(AppState.confirming)
@@ -110,14 +108,12 @@ async def confirming_handler(callback: CallbackQuery, state: FSMContext, bot: Bo
         else "Отсутствует"
 
     await bot.send_message(ADMIN_ID,
-                           f"Новая заявка"
-                           f""
-                           f"Услуга: {service}"
-                           f"Имя: {name}"
-                           f"Телефон: {phone}"
-                           f""
+                           f"Новая заявка\n\n"
+                           f"Услуга: {service}\n"
+                           f"Имя: {name}\n"
+                           f"Телефон: {phone}\n\n"
                            f"Telegram ID: {user_id}"
-                           f"Username: {user_name}")
+                           f"Username: @{user_name}")
 
     await callback.answer()
     await callback.message.answer("Заявка подтверждена")
